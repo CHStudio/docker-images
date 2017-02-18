@@ -1,0 +1,48 @@
+image: docker:git
+
+stages:
+  - build
+
+before_script:
+  - docker login --username=$DOCKER_AUTH_USERNAME --password=$DOCKER_AUTH_PASSWORD
+
+php-ci:7.0:
+  stage: build
+  services:
+    - docker:dind
+  script:
+    - cd php-ci
+    - docker build -t shulard/php-ci:7.0 .
+    - docker push shulard/php-ci:7.0
+    - export PHP_VERSION=`docker run shulard/php-ci:7.0 php -v | sed -n 1p | cut -d ' ' -f 2`
+    - docker tag shulard/php-ci:7.0 shulard/php-ci:$PHP_VERSION
+    - docker push shulard/php-ci:$PHP_VERSION
+  only:
+    - master
+
+php-ci:7.1:
+  stage: build
+  services:
+    - docker:dind
+  script:
+    - cd php-ci
+    - sed s/php:7.0-alpine/php:7.1-alpine/ Dockerfile > Dockerfile71
+    - docker build -t shulard/php-ci:7.1 --file=Dockerfile71 .
+    - docker push shulard/php-ci:7.1
+    - export PHP_VERSION=`docker run shulard/php-ci:7.1 php -v | sed -n 1p | cut -d ' ' -f 2`
+    - docker tag shulard/php-ci:7.1 shulard/php-ci:$PHP_VERSION
+    - docker push shulard/php-ci:$PHP_VERSION
+  only:
+    - master
+
+php-ci:latest:
+  stage: build
+  services:
+    - docker:dind
+  script:
+    - cd php-ci
+    - sed s/php:7.0-alpine/php:alpine/ Dockerfile > DockerfileLatest
+    - docker build -t shulard/php-ci:latest --file=DockerfileLatest .
+    - docker push shulard/php-ci:latest
+  only:
+    - master

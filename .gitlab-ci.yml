@@ -6,6 +6,8 @@ stages:
 before_script:
   - docker login --username=$DOCKER_AUTH_USERNAME --password=$DOCKER_AUTH_PASSWORD
 
+#-------------------------------------------------------------------------------
+
 php-ci:7.0:
   stage: build
   services:
@@ -44,5 +46,48 @@ php-ci:latest:
     - sed s/php:7.0-alpine/php:alpine/ Dockerfile > DockerfileLatest
     - docker build -t shulard/php-ci:latest --file=DockerfileLatest .
     - docker push shulard/php-ci:latest
+  only:
+    - master
+
+#-------------------------------------------------------------------------------
+
+php-ci.mariadb-client:7.0:
+  stage: build
+  services:
+    - docker:dind
+  script:
+    - cd php-ci.mariadb-client
+    - docker build -t shulard/php-ci.mariadb-client:7.0 .
+    - docker push shulard/php-ci.mariadb-client:7.0
+    - export PHP_VERSION=`docker run shulard/php-ci.mariadb-client:7.0 php -v | sed -n 1p | cut -d ' ' -f 2`
+    - docker tag shulard/php-ci.mariadb-client:7.0 shulard/php-ci.mariadb-client:$PHP_VERSION
+    - docker push shulard/php-ci.mariadb-client:$PHP_VERSION
+  only:
+    - master
+
+php-ci.mariadb-client:7.1:
+  stage: build
+  services:
+    - docker:dind
+  script:
+    - cd php-ci.mariadb-client
+    - sed s/php-ci:7.0/php-ci:7.1/ Dockerfile > Dockerfile71
+    - docker build -t shulard/php-ci.mariadb-client:7.1 --file=Dockerfile71 .
+    - docker push shulard/php-ci.mariadb-client:7.1
+    - export PHP_VERSION=`docker run shulard/php-ci.mariadb-client:7.1 php -v | sed -n 1p | cut -d ' ' -f 2`
+    - docker tag shulard/php-ci.mariadb-client:7.1 shulard/php-ci.mariadb-client:$PHP_VERSION
+    - docker push shulard/php-ci.mariadb-client:$PHP_VERSION
+  only:
+    - master
+
+php-ci.mariadb-client:latest:
+  stage: build
+  services:
+    - docker:dind
+  script:
+    - cd php-ci.mariadb-client
+    - sed s/php-ci:7.0/php-ci:latest/ Dockerfile > DockerfileLatest
+    - docker build -t shulard/php-ci.mariadb-client:latest --file=DockerfileLatest .
+    - docker push shulard/php-ci.mariadb-client:latest
   only:
     - master

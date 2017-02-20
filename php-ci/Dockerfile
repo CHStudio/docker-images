@@ -5,7 +5,7 @@ RUN apk --update add \
         make \
         autoconf \
         zlib-dev \
-    && docker-php-ext-install mysqli pdo_mysql zip \
+    && docker-php-ext-install zip \
     && curl -sS https://getcomposer.org/installer | php \
     && mv composer.phar /usr/local/bin/composer \
     && pecl install xdebug && docker-php-ext-enable xdebug \

@@ -77,9 +77,9 @@ php-ci.mysql:7.0:
     - docker push chstudio/php-ci.mysql:$PHP_VERSION
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
     - docker tag chstudio/php-ci.mysql:7.0 registry.gitlab.com/chstudio/docker-images:php-ci.mysql_7.0
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_7.0
+    - docker push registry.gitlab.com/chstudio/docker-images:php-ci.mysql_7.0
     - docker tag chstudio/php-ci.mysql:7.0 registry.gitlab.com/chstudio/docker-images:php-ci.mysql_$PHP_VERSION
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_$PHP_VERSION
+    - docker push registry.gitlab.com/chstudio/docker-images:php-ci.mysql_$PHP_VERSION
   only:
     - master
 
@@ -97,9 +97,9 @@ php-ci.mysql:7.1:
     - docker push chstudio/php-ci.mysql:$PHP_VERSION
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
     - docker tag chstudio/php-ci.mysql:7.1 registry.gitlab.com/chstudio/docker-images:php-ci.mysql_7.1
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_7.1
+    - docker push registry.gitlab.com/chstudio/docker-images:php-ci.mysql_7.1
     - docker tag chstudio/php-ci.mysql:7.1 registry.gitlab.com/chstudio/docker-images:php-ci.mysql_$PHP_VERSION
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_$PHP_VERSION
+    - docker push registry.gitlab.com/chstudio/docker-images:php-ci.mysql_$PHP_VERSION
   only:
     - master
 

@@ -19,6 +19,9 @@ php-ci:7.0:
     - export PHP_VERSION=`docker run chstudio/php-ci:7.0 php -v | sed -n 1p | cut -d ' ' -f 2`
     - docker tag chstudio/php-ci:7.0 chstudio/php-ci:$PHP_VERSION
     - docker push chstudio/php-ci:$PHP_VERSION
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_7.0
+    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_$PHP_VERSION
   only:
     - master
 
@@ -34,6 +37,9 @@ php-ci:7.1:
     - export PHP_VERSION=`docker run chstudio/php-ci:7.1 php -v | sed -n 1p | cut -d ' ' -f 2`
     - docker tag chstudio/php-ci:7.1 chstudio/php-ci:$PHP_VERSION
     - docker push chstudio/php-ci:$PHP_VERSION
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_7.1
+    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_$PHP_VERSION
   only:
     - master
 
@@ -46,6 +52,8 @@ php-ci:latest:
     - sed s/php:7.0-alpine/php:alpine/ Dockerfile > DockerfileLatest
     - docker build -t chstudio/php-ci:latest --file=DockerfileLatest .
     - docker push chstudio/php-ci:latest
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_latest
   only:
     - master
 

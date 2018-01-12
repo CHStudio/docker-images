@@ -74,6 +74,18 @@ php-ci:7.1:
     - master
   <<: *php-ci-template
 
+php-ci:7.2:
+  stage: build
+  variables:
+    PHP_ROOT_VERSION: "7.2"
+    PHP_IMAGE_TAG: "php:7.2-alpine"
+    PHP_XDEBUG_VERSION: "xdebug-2.6.0beta1"
+  services:
+    - docker:dind
+  only:
+    - master
+  <<: *php-ci-template
+
 php-ci:latest:
   stage: build
   variables:

@@ -7,113 +7,81 @@ before_script:
   - docker login --username=$DOCKER_AUTH_USERNAME --password=$DOCKER_AUTH_PASSWORD
 
 #-------------------------------------------------------------------------------
+.php-ci-template: &php-ci-template
+  script:
+    - cd php-ci
+    - |
+      sed s/php:7.0-alpine/${PHP_IMAGE_TAG}/ Dockerfile > CurrentDockerfile
+
+      if [ -n "$PHP_XDEBUG_VERSION" ]
+      then
+        mv CurrentDockerfile OldDockerfile
+        sed s/pecl\ install\ xdebug/pecl\ install\ ${PHP_XDEBUG_VERSION}/ OldDockerfile > CurrentDockerfile
+        rm OldDockerfile
+      fi
+
+    - docker build -t chstudio/php-ci:${PHP_ROOT_VERSION} --file=CurrentDockerfile .
+    - cd ../php-ci.mysql
+    - sed s/php-ci:7.0/php-ci:${PHP_ROOT_VERSION}/ Dockerfile > CurrentDockerfile
+    - docker build -t chstudio/php-ci.mysql:${PHP_ROOT_VERSION} --file=CurrentDockerfile .
+
+    - export PHP_VERSION=`docker run chstudio/php-ci:${PHP_ROOT_VERSION} php -v | sed -n 1p | cut -d ' ' -f 2`
+
+    - docker push chstudio/php-ci:${PHP_ROOT_VERSION}
+    - docker push chstudio/php-ci.mysql:${PHP_ROOT_VERSION}
+    - |
+      if [[ "$PHP_ROOT_VERSION" != "latest" ]]
+      then
+        docker tag chstudio/php-ci:${PHP_ROOT_VERSION} chstudio/php-ci:$PHP_VERSION
+        docker push chstudio/php-ci:$PHP_VERSION
+        docker tag chstudio/php-ci.mysql:${PHP_ROOT_VERSION} chstudio/php-ci.mysql:$PHP_VERSION
+        docker push chstudio/php-ci.mysql:$PHP_VERSION
+      fi
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+    - docker tag chstudio/php-ci:${PHP_ROOT_VERSION} registry.gitlab.com/chstudio/docker-images:php-ci_${PHP_ROOT_VERSION}
+    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_${PHP_ROOT_VERSION}
+    - docker tag chstudio/php-ci.mysql:${PHP_ROOT_VERSION} registry.gitlab.com/chstudio/docker-images:php-ci.mysql_${PHP_ROOT_VERSION}
+    - docker push registry.gitlab.com/chstudio/docker-images:php-ci.mysql_${PHP_ROOT_VERSION}
+    - |
+      if [[ "$PHP_ROOT_VERSION" != "latest" ]]
+      then
+        docker tag chstudio/php-ci:${PHP_ROOT_VERSION} registry.gitlab.com/chstudio/docker-images:php-ci_${PHP_VERSION}
+        docker push registry.gitlab.com/chstudio/docker-images:php-ci_${PHP_VERSION}
+        docker tag chstudio/php-ci.mysql:${PHP_ROOT_VERSION} registry.gitlab.com/chstudio/docker-images:php-ci.mysql_${PHP_VERSION}
+        docker push registry.gitlab.com/chstudio/docker-images:php-ci.mysql_${PHP_VERSION}
+      fi
+
 
 php-ci:7.0:
   stage: build
+  variables:
+    PHP_ROOT_VERSION: "7.0"
+    PHP_IMAGE_TAG: "php:7.0-alpine"
   services:
     - docker:dind
-  script:
-    - cd php-ci
-    - docker build -t chstudio/php-ci:7.0 .
-    - docker push chstudio/php-ci:7.0
-    - export PHP_VERSION=`docker run chstudio/php-ci:7.0 php -v | sed -n 1p | cut -d ' ' -f 2`
-    - docker tag chstudio/php-ci:7.0 chstudio/php-ci:$PHP_VERSION
-    - docker push chstudio/php-ci:$PHP_VERSION
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-    - docker tag chstudio/php-ci:7.0 registry.gitlab.com/chstudio/docker-images:php-ci_7.0
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_7.0
-    - docker tag chstudio/php-ci:7.0 registry.gitlab.com/chstudio/docker-images:php-ci_$PHP_VERSION
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_$PHP_VERSION
   only:
     - master
+  <<: *php-ci-template
 
 php-ci:7.1:
   stage: build
+  variables:
+    PHP_ROOT_VERSION: "7.1"
+    PHP_IMAGE_TAG: "php:7.1-alpine"
   services:
     - docker:dind
-  script:
-    - cd php-ci
-    - sed s/php:7.0-alpine/php:7.1-alpine/ Dockerfile > Dockerfile71
-    - docker build -t chstudio/php-ci:7.1 --file=Dockerfile71 .
-    - docker push chstudio/php-ci:7.1
-    - export PHP_VERSION=`docker run chstudio/php-ci:7.1 php -v | sed -n 1p | cut -d ' ' -f 2`
-    - docker tag chstudio/php-ci:7.1 chstudio/php-ci:$PHP_VERSION
-    - docker push chstudio/php-ci:$PHP_VERSION
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-    - docker tag chstudio/php-ci:7.1 registry.gitlab.com/chstudio/docker-images:php-ci_7.1
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_7.1
-    - docker tag chstudio/php-ci:7.1 registry.gitlab.com/chstudio/docker-images:php-ci_$PHP_VERSION
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_$PHP_VERSION
   only:
     - master
+  <<: *php-ci-template
 
 php-ci:latest:
   stage: build
+  variables:
+    PHP_ROOT_VERSION: "latest"
+    PHP_IMAGE_TAG: "php:alpine"
+    PHP_XDEBUG_VERSION: "xdebug-2.6.0beta1"
   services:
     - docker:dind
-  script:
-    - cd php-ci
-    - sed s/php:7.0-alpine/php:alpine/ Dockerfile > DockerfileLatest
-    - docker build -t chstudio/php-ci:latest --file=DockerfileLatest .
-    - docker push chstudio/php-ci:latest
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-    - docker tag chstudio/php-ci:latest registry.gitlab.com/chstudio/docker-images:php-ci_latest
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci_latest
   only:
     - master
-
-#-------------------------------------------------------------------------------
-
-php-ci.mysql:7.0:
-  stage: build
-  services:
-    - docker:dind
-  script:
-    - cd php-ci.mysql
-    - docker build -t chstudio/php-ci.mysql:7.0 .
-    - docker push chstudio/php-ci.mysql:7.0
-    - export PHP_VERSION=`docker run chstudio/php-ci.mysql:7.0 php -v | sed -n 1p | cut -d ' ' -f 2`
-    - docker tag chstudio/php-ci.mysql:7.0 chstudio/php-ci.mysql:$PHP_VERSION
-    - docker push chstudio/php-ci.mysql:$PHP_VERSION
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-    - docker tag chstudio/php-ci.mysql:7.0 registry.gitlab.com/chstudio/docker-images:php-ci.mysql_7.0
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci.mysql_7.0
-    - docker tag chstudio/php-ci.mysql:7.0 registry.gitlab.com/chstudio/docker-images:php-ci.mysql_$PHP_VERSION
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci.mysql_$PHP_VERSION
-  only:
-    - master
-
-php-ci.mysql:7.1:
-  stage: build
-  services:
-    - docker:dind
-  script:
-    - cd php-ci.mysql
-    - sed s/php-ci:7.0/php-ci:7.1/ Dockerfile > Dockerfile71
-    - docker build -t chstudio/php-ci.mysql:7.1 --file=Dockerfile71 .
-    - docker push chstudio/php-ci.mysql:7.1
-    - export PHP_VERSION=`docker run chstudio/php-ci.mysql:7.1 php -v | sed -n 1p | cut -d ' ' -f 2`
-    - docker tag chstudio/php-ci.mysql:7.1 chstudio/php-ci.mysql:$PHP_VERSION
-    - docker push chstudio/php-ci.mysql:$PHP_VERSION
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-    - docker tag chstudio/php-ci.mysql:7.1 registry.gitlab.com/chstudio/docker-images:php-ci.mysql_7.1
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci.mysql_7.1
-    - docker tag chstudio/php-ci.mysql:7.1 registry.gitlab.com/chstudio/docker-images:php-ci.mysql_$PHP_VERSION
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci.mysql_$PHP_VERSION
-  only:
-    - master
-
-php-ci.mysql:latest:
-  stage: build
-  services:
-    - docker:dind
-  script:
-    - cd php-ci.mysql
-    - sed s/php-ci:7.0/php-ci:latest/ Dockerfile > DockerfileLatest
-    - docker build -t chstudio/php-ci.mysql:latest --file=DockerfileLatest .
-    - docker push chstudio/php-ci.mysql:latest
-    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-    - docker tag chstudio/php-ci.mysql:latest registry.gitlab.com/chstudio/docker-images:php-ci.mysql_latest
-    - docker push registry.gitlab.com/chstudio/docker-images:php-ci.mysql_latest
-  only:
-    - master
+  <<: *php-ci-template

@@ -79,7 +79,6 @@ php-ci:7.2:
   variables:
     PHP_ROOT_VERSION: "7.2"
     PHP_IMAGE_TAG: "php:7.2-alpine"
-    PHP_XDEBUG_VERSION: "xdebug-2.6.0beta1"
   services:
     - docker:dind
   only:
@@ -91,7 +90,6 @@ php-ci:latest:
   variables:
     PHP_ROOT_VERSION: "latest"
     PHP_IMAGE_TAG: "php:alpine"
-    PHP_XDEBUG_VERSION: "xdebug-2.6.0beta1"
   services:
     - docker:dind
   only:

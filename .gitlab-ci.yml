@@ -90,6 +90,7 @@ php-ci:latest:
   variables:
     PHP_ROOT_VERSION: "latest"
     PHP_IMAGE_TAG: "php:alpine"
+    PHP_XDEBUG_VERSION: "xdebug-2.7.0beta1"
   services:
     - docker:dind
   only:

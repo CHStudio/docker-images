@@ -5,6 +5,7 @@ RUN apk --update add \
         make \
         autoconf \
         zlib-dev \
+        libzip \
     && docker-php-ext-install zip \
     && curl -sS https://getcomposer.org/installer | php \
     && mv composer.phar /usr/local/bin/composer \
